@@ -27,13 +27,56 @@ uvicorn app.main:app --reload
 
 初回起動時、DBが空の場合はサンプルタスクが自動的に投入されます。
 
+## Vercelへのデプロイ
+
+このリポジトリはVercelの Python Serverless Functions を使ってそのままデプロイできます。
+
+### 事前準備: DBの用意
+
+Vercelの実行環境は `/tmp` 以外のファイルシステムが読み取り専用のため、SQLiteファイルを永続化できません。
+本番運用ではPostgres（[Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) や [Neon](https://neon.tech/) など）を用意し、接続文字列を控えてください。
+
+> `DATABASE_URL` を設定しない場合でも `/tmp` にSQLiteを作成して動作はしますが、コールドスタートのたびにデータがリセットされるため、動作確認用途に限ります。
+
+### デプロイ手順
+
+1. Vercel CLIを導入してログインする
+   ```bash
+   npm i -g vercel
+   vercel login
+   ```
+2. プロジェクトディレクトリでリンク（初回のみ）
+   ```bash
+   cd task-admin
+   vercel link
+   ```
+3. 環境変数 `DATABASE_URL` をVercelプロジェクトに設定する（Vercelダッシュボードの Settings → Environment Variables、またはCLI）
+   ```bash
+   vercel env add DATABASE_URL production
+   # Postgresの接続文字列 (例: postgres://user:pass@host/dbname) を入力
+   ```
+4. デプロイする
+   ```bash
+   vercel --prod
+   ```
+
+GitHubリポジトリと連携すれば、push時に自動デプロイされる設定も可能です（Vercelダッシュボードの「Import Project」から連携）。
+
+### 構成の仕組み
+
+- `api/index.py`: Vercelのサーバーレス関数エントリポイント。`app.main:app`（FastAPIアプリ）をそのまま公開する。
+- `vercel.json`: `/api/*` へのリクエストを `api/index.py` にルーティングし、`/` は `static/index.html` を返すよう設定。`/static/*` のJS/CSSはVercelの静的ホスティングがそのまま配信する。
+- `app/database.py`: `DATABASE_URL` が設定されていればPostgres等に接続し、未設定時はローカル用SQLite（Vercel上では `/tmp`）にフォールバックする。
+
 ## ディレクトリ構成
 
 ```
 task-admin/
+├── api/
+│   └── index.py        # Vercelサーバーレス関数のエントリポイント
 ├── app/
 │   ├── main.py        # FastAPIアプリ本体
-│   ├── database.py     # DB接続設定 (SQLite)
+│   ├── database.py     # DB接続設定 (SQLite / Postgres)
 │   ├── models.py       # SQLAlchemyモデル (Task / Tag)
 │   ├── schemas.py       # Pydanticスキーマ
 │   ├── crud.py          # DB操作ロジック
@@ -46,6 +89,7 @@ task-admin/
 │   ├── css/style.css
 │   └── js/app.js
 ├── data/                 # SQLiteのDBファイル格納先 (gitignore対象)
+├── vercel.json            # Vercelのルーティング設定
 └── requirements.txt
 ```
 
