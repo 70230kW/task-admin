@@ -2,6 +2,8 @@
 
 Python (FastAPI) + SQLite + バニラJS で構築した、高機能なタスク管理Webアプリです。
 
+Vercelにデプロイすれば、以降はターミナル操作は一切不要です。ブラウザでURLにアクセスするだけの、普通のWebサイトとして使えます（下記「[Vercelへのデプロイ](#vercelへのデプロイ)」参照）。ローカルでの起動手順は開発・動作確認用です。
+
 ## 機能（タブ構成）
 
 - **タスクリスト**: タスク名 / タグ / 顧客名 / 担当者名 / 期日 / 進捗率 / ステータスを一覧表示。検索・絞り込み・並び替えに対応。
@@ -29,38 +31,32 @@ uvicorn app.main:app --reload
 
 ## Vercelへのデプロイ
 
-このリポジトリはVercelの Python Serverless Functions を使ってそのままデプロイできます。
+このリポジトリはVercelの Python Serverless Functions を使ってそのままデプロイでき、デプロイ後はブラウザでURLを開くだけで使える普通のWebサイトになります。以下はすべてブラウザ上の操作のみで完結し、ターミナルは使いません。
 
-### 事前準備: DBの用意
+### 手順（ブラウザのみ・初回のみ）
 
-Vercelの実行環境は `/tmp` 以外のファイルシステムが読み取り専用のため、SQLiteファイルを永続化できません。
-本番運用ではPostgres（[Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) や [Neon](https://neon.tech/) など）を用意し、接続文字列を控えてください。
+1. [vercel.com](https://vercel.com/) にアクセスし、GitHubアカウントでログインする。
+2. ダッシュボードで **Add New... → Project** を選び、このGitHubリポジトリ（`task-admin`）を選択してImportする。
+   - Vercelが自動でPython Serverless Functionsとして認識します（設定変更は不要）。
+3. （推奨）データを永続化したい場合は、Vercelダッシュボードの **Storage** タブから **Vercel Postgres**（Neonベース）を作成し、対象プロジェクトに接続する。接続すると `DATABASE_URL` などの環境変数が自動で設定されます。
+   - Postgresを接続しない場合でも一旦は動作しますが、`/tmp` にSQLiteを作るだけなのでコールドスタートのたびにデータがリセットされます（動作確認用途に限る）。
+4. **Deploy** ボタンを押す。数十秒でビルドが完了し、`https://<プロジェクト名>.vercel.app` のようなURLが発行されます。
 
-> `DATABASE_URL` を設定しない場合でも `/tmp` にSQLiteを作成して動作はしますが、コールドスタートのたびにデータがリセットされるため、動作確認用途に限ります。
+以降は、このリポジトリの `main` ブランチにpushするたびに自動で再デプロイされます。ユーザーは発行されたURLをブラウザで開くだけで、タスクリスト・カンバンボード・期日管理・顧客別ビュー・担当者別ビューを操作できます。
 
-### デプロイ手順
+<details>
+<summary>CLIでデプロイしたい場合（任意）</summary>
 
-1. Vercel CLIを導入してログインする
-   ```bash
-   npm i -g vercel
-   vercel login
-   ```
-2. プロジェクトディレクトリでリンク（初回のみ）
-   ```bash
-   cd task-admin
-   vercel link
-   ```
-3. 環境変数 `DATABASE_URL` をVercelプロジェクトに設定する（Vercelダッシュボードの Settings → Environment Variables、またはCLI）
-   ```bash
-   vercel env add DATABASE_URL production
-   # Postgresの接続文字列 (例: postgres://user:pass@host/dbname) を入力
-   ```
-4. デプロイする
-   ```bash
-   vercel --prod
-   ```
+```bash
+npm i -g vercel
+vercel login
+cd task-admin
+vercel link
+vercel env add DATABASE_URL production   # Postgresの接続文字列を入力
+vercel --prod
+```
 
-GitHubリポジトリと連携すれば、push時に自動デプロイされる設定も可能です（Vercelダッシュボードの「Import Project」から連携）。
+</details>
 
 ### 構成の仕組み
 
