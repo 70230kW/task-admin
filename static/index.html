@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タスク管理サイト</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>タスク管理サイト</h1>
+    <button id="btn-new-task" class="btn btn-primary">＋ 新規タスク</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="list">タスクリスト</button>
+    <button class="tab-btn" data-tab="kanban">カンバンボード</button>
+    <button class="tab-btn" data-tab="due">期日管理</button>
+    <button class="tab-btn" data-tab="customer">顧客別ビュー</button>
+    <button class="tab-btn" data-tab="assignee">担当者別ビュー</button>
+  </nav>
+
+  <main class="tab-content">
+
+    <!-- タスクリスト -->
+    <section id="tab-list" class="tab-pane active">
+      <div class="filter-bar">
+        <input type="text" id="filter-q" placeholder="タスク名で検索...">
+        <select id="filter-customer"><option value="">顧客名: すべて</option></select>
+        <select id="filter-assignee"><option value="">担当者: すべて</option></select>
+        <select id="filter-tag"><option value="">タグ: すべて</option></select>
+        <select id="filter-status"><option value="">ステータス: すべて</option></select>
+        <button id="btn-clear-filter" class="btn btn-ghost">クリア</button>
+      </div>
+      <div class="table-wrap">
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th data-sort="name">タスク名</th>
+              <th data-sort="tags">タグ</th>
+              <th data-sort="customer">顧客名</th>
+              <th data-sort="assignee">担当者名</th>
+              <th data-sort="due_date">期日</th>
+              <th data-sort="progress">進捗率</th>
+              <th data-sort="status">ステータス</th>
+              <th class="col-actions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="task-list-body"></tbody>
+        </table>
+      </div>
+      <p id="list-empty" class="empty-msg" hidden>該当するタスクがありません。</p>
+    </section>
+
+    <!-- カンバンボード -->
+    <section id="tab-kanban" class="tab-pane">
+      <div class="kanban-board" id="kanban-board"></div>
+    </section>
+
+    <!-- 期日管理 -->
+    <section id="tab-due" class="tab-pane">
+      <div class="due-board" id="due-board"></div>
+    </section>
+
+    <!-- 顧客別ビュー -->
+    <section id="tab-customer" class="tab-pane">
+      <div class="group-board" id="customer-board"></div>
+    </section>
+
+    <!-- 担当者別ビュー -->
+    <section id="tab-assignee" class="tab-pane">
+      <div class="group-board" id="assignee-board"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- タスク編集モーダル -->
+<div id="task-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">新規タスク</h2>
+      <button id="btn-modal-close" class="btn-icon">×</button>
+    </div>
+    <form id="task-form">
+      <input type="hidden" id="f-id">
+      <div class="form-row">
+        <label for="f-name">タスク名 <span class="required">*</span></label>
+        <input type="text" id="f-name" required maxlength="200">
+      </div>
+      <div class="form-row form-row-split">
+        <div>
+          <label for="f-customer">顧客名</label>
+          <input type="text" id="f-customer" list="dl-customers" maxlength="100">
+          <datalist id="dl-customers"></datalist>
+        </div>
+        <div>
+          <label for="f-assignee">担当者名</label>
+          <input type="text" id="f-assignee" list="dl-assignees" maxlength="100">
+          <datalist id="dl-assignees"></datalist>
+        </div>
+      </div>
+      <div class="form-row form-row-split">
+        <div>
+          <label for="f-due-date">期日</label>
+          <input type="date" id="f-due-date">
+        </div>
+        <div>
+          <label for="f-status">ステータス</label>
+          <select id="f-status"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="f-tags">タグ（カンマ区切り）</label>
+        <input type="text" id="f-tags" list="dl-tags" placeholder="例: 営業, 資料作成">
+        <datalist id="dl-tags"></datalist>
+      </div>
+      <div class="form-row">
+        <label for="f-progress">進捗率: <span id="f-progress-val">0</span>%</label>
+        <input type="range" id="f-progress" min="0" max="100" step="5" value="0">
+      </div>
+      <div class="form-row">
+        <label for="f-memo">メモ</label>
+        <textarea id="f-memo" rows="3" maxlength="2000"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-delete-task" class="btn btn-danger" hidden>削除</button>
+        <div class="spacer"></div>
+        <button type="button" id="btn-cancel" class="btn btn-ghost">キャンセル</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
